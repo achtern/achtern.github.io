@@ -25,9 +25,78 @@
         </ul>
       </header>
       <section>
-        <p><a href="https://github.com/achtern/AchternEngine">AchternEngine</a> is a in-dev OpenGL 3.3 GraphicsEngine designed to be used with game development.</p>
+        <p><a href="https://github.com/achtern/AchternEngine">AchternEngine</a> is a Java 3D Graphics Engine, using OpenGL has backend (LWJGL bindings).</p>
 
-<p>Currently in development. No documentation besides README an javadoc sadly...</p>
+<p>AchternEngine approaches the concept of a GraphicsEngine differently than many others. Thanks to Java Native Interface the Engine is completely independent of the Graphics-Backend or binding.
+The core package of the engine has no calls to any graphics library, only to it's wrappers, which are getting injected by the user.</p>
+
+<p>This allows to be very flexible and theoretically allows the user to write their own Graphics-Backend and hook it into the engine. This however is not fully working at the moment, I guess, at least not so easy to implement, since the wrapper which has to be implemented is heavily influenced by OpenGL and the RenderEngine is following OpenGL conventions and using it's workflow.</p>
+
+<h2>
+<a id="get-started---example" class="anchor" href="#get-started---example" aria-hidden="true"><span class="octicon octicon-link"></span></a>Get started - Example</h2>
+
+<div class="highlight highlight-java"><pre><span class="pl-c">// Import the entire core package</span>
+<span class="pl-k">import</span> <span class="pl-smi">org.achtern.core.*</span>;
+<span class="pl-c">// Import the Graphics-Binding. LWJGL 2</span>
+<span class="pl-k">import</span> <span class="pl-smi">org.achtern.lwjgl.bootstrap.LWJGLProvider</span>;
+
+<span class="pl-c">/**</span>
+<span class="pl-c"> * This is the MainGame class, it should extend 'Game'</span>
+<span class="pl-c"> */</span>
+<span class="pl-s">public</span> <span class="pl-s">class</span> <span class="pl-en">MyGame</span> <span class="pl-s">extends</span> <span class="pl-e">Game</span> {
+    <span class="pl-s">public</span> <span class="pl-s">static</span> <span class="pl-st">void</span> <span class="pl-en">main</span>(<span class="pl-stj">String</span>... <span class="pl-v">args</span>) {
+        <span class="pl-c">// Create a new CoreEngine, running the MyGame class and with the LWJGL Graphics-Binding</span>
+        <span class="pl-stj">CoreEngine</span> engine <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-stj">CoreEngine</span>(<span class="pl-k">new</span> <span class="pl-stj">MyGame</span>(), <span class="pl-k">new</span> <span class="pl-stj">LWJGLProvider</span>());
+        <span class="pl-c">// Start the Game at a locked 60fps,</span>
+        <span class="pl-c">// This will run an infinite loop, which can be stopped,</span>
+        <span class="pl-c">// using 'CoreEngine.requestStop()' (note the static call!)</span>
+        engine<span class="pl-k">.</span>start(<span class="pl-c1">60</span>); <span class="pl-c">// 60fps</span>
+    }
+
+    <span class="pl-c">/**</span>
+<span class="pl-c">     * Every Game must provide initial window dimenensions,</span>
+<span class="pl-c">     * the window can be resized by the user during the game</span>
+<span class="pl-c">     */</span>
+    <span class="pl-st">@Override</span>
+    <span class="pl-s">public</span> <span class="pl-stj">Dimension</span> <span class="pl-en">getWindowDimensions</span>() {
+        <span class="pl-k">return</span> <span class="pl-k">new</span> <span class="pl-stj">Dimension</span>(<span class="pl-c1">1280</span>, <span class="pl-c1">720</span>);
+    }
+
+    <span class="pl-c">/**</span>
+<span class="pl-c">     * This will be used as window title.</span>
+<span class="pl-c">     */</span>
+    <span class="pl-st">@Override</span>
+    <span class="pl-s">public</span> <span class="pl-stj">String</span> <span class="pl-en">getWindowTitle</span>() {
+        <span class="pl-k">return</span> <span class="pl-s1"><span class="pl-pds">"</span>MyGame<span class="pl-pds">"</span></span>;
+    }
+
+    <span class="pl-c">/**</span>
+<span class="pl-c">     * The init() method gets called, right after a loading screen has been rendered to the screen,</span>
+<span class="pl-c">     * The complete engine is fully booted at this point and the Graphics-Binding is fully working.</span>
+<span class="pl-c">     */</span>
+    <span class="pl-st">@Override</span>
+    <span class="pl-s">public</span> <span class="pl-st">void</span> <span class="pl-en">init</span>(<span class="pl-stj">CoreEngine</span> <span class="pl-v">engine</span>) {
+        <span class="pl-c">// This is adding a new Node to the Scenegraph with a Camera (more on Nodes in the documentation)</span>
+        add(<span class="pl-k">new</span> <span class="pl-stj">Node</span>(<span class="pl-s1"><span class="pl-pds">"</span>Camera<span class="pl-pds">"</span></span>)<span class="pl-k">.</span>add(<span class="pl-k">new</span> <span class="pl-stj">Camera</span>()));
+        <span class="pl-c">// Load a geometry (Figure) from disk and insert it as Node into the scenegraph.</span>
+        add(<span class="pl-stj">ResourceLoader</span><span class="pl-k">.</span>getFigure(<span class="pl-s1"><span class="pl-pds">"</span>floor<span class="pl-pds">"</span></span>)<span class="pl-k">.</span>boxed());
+    }
+
+    <span class="pl-c">/**</span>
+<span class="pl-c">     * This is called once every update. Usally you do not need this, only for debugging I guess.</span>
+<span class="pl-c">     */</span>
+    <span class="pl-st">@Override</span>
+    <span class="pl-s">public</span> <span class="pl-st">void</span> <span class="pl-en">update</span>(<span class="pl-st">float</span> <span class="pl-v">delta</span>) {
+    }
+
+    <span class="pl-c">/**</span>
+<span class="pl-c">     * This is called during render cycles. Same as update() not needed during production.</span>
+<span class="pl-c">     */</span>
+    <span class="pl-st">@Override</span>
+    <span class="pl-s">public</span> <span class="pl-st">void</span> <span class="pl-en">render</span>(<span class="pl-stj">RenderEngine</span> <span class="pl-v">renderEngine</span>) {
+    }
+
+}</pre></div>
       </section>
     </div>
     <footer>
